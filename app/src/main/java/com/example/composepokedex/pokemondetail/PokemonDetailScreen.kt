@@ -145,6 +145,7 @@ fun PokemonDetailScreen(
 fun PokemonDetailTopSection(
     navController: NavController,
     modifier : Modifier = Modifier,
+    viewModel: PokemonListViewModel = hiltViewModel()
 ) {
     Box(
         contentAlignment = Alignment.TopStart,
@@ -167,6 +168,7 @@ fun PokemonDetailTopSection(
                 .offset(16.dp, 16.dp)
                 .clickable {
                     navController.popBackStack()
+
                 }
         )
 

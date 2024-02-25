@@ -2,6 +2,7 @@ package com.example.composepokedex.pokemonlist
 
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
@@ -24,11 +25,12 @@ class   PokemonListViewModel @Inject constructor(
     private var currPage = 0
     var pokemonList = mutableStateOf<List<PokedexListEntry>>(listOf())
     var loadError = mutableStateOf("")
+    var isAsc = mutableStateOf(true)
     var isLoading = mutableStateOf(false)
     var endReached = mutableStateOf(false)
 
     private var cachedPokemonList = listOf<PokedexListEntry>()
-
+    private var sortedPokemonList = listOf<PokedexListEntry>()
     private var pokemonListCopy = listOf<PokedexListEntry>()
 
 
@@ -40,8 +42,28 @@ class   PokemonListViewModel @Inject constructor(
     }
     fun reloadPokemonList()
     {
-        pokemonList = mutableStateOf<List<PokedexListEntry>>(listOf())
+        pokemonList.value = listOf()
         pokemonList.value = pokemonListCopy
+    }
+    fun sortPokemon(){
+        viewModelScope.launch(Dispatchers.Default){
+            isLoading.value = true
+            if (isAsc.value) {
+                sortedPokemonList = pokemonListCopy.sortedBy { pokemon -> pokemon.pokemonName }
+                isAsc.value = false
+            }
+            else{
+            sortedPokemonList =
+                pokemonListCopy.sortedByDescending { pokemon -> pokemon.pokemonName }
+            isAsc.value = true
+        }
+            pokemonList.value = listOf()
+            pokemonList.value = sortedPokemonList
+            isLoading.value = false
+            Log.i("sorted List", "-----------------PokemonListSorted-----------------------")
+            Log.i("List", sortedPokemonList.toString())
+            Log.i("Pokemon List", pokemonList.value.toString())
+        }
     }
 
 

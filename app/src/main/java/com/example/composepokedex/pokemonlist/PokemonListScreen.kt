@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -33,8 +34,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,7 +62,8 @@ import coil.request.ImageRequest
 import com.example.composepokedex.R
 import com.example.composepokedex.data.remote.models.PokedexListEntry
 import com.example.composepokedex.ui.theme.RobotoCondensed
-
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -67,6 +71,7 @@ fun PokemonListScreen(
     navController: NavController,
     viewmodel : PokemonListViewModel = hiltViewModel<PokemonListViewModel>()
 ) {
+
     Surface(
         color = MaterialTheme.colorScheme.background,
         modifier = Modifier.fillMaxSize()
@@ -83,7 +88,10 @@ fun PokemonListScreen(
                 hint = "Search...",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(16.dp),
+                sortClicked = {
+                    viewmodel.sortPokemon()
+                }
             ){
                 viewmodel.searchPokemonList(it)
             }
@@ -100,6 +108,8 @@ fun PokemonListScreen(
 fun SearchBar(
     modifier:Modifier = Modifier,
     hint: String = "",
+    sortClicked:()->Unit,
+    viewmodel : PokemonListViewModel = hiltViewModel(),
     onSearch:(String) -> Unit = {}
 ) {
     var text by remember{
@@ -108,32 +118,65 @@ fun SearchBar(
     var isHintDisplayed by remember{
         mutableStateOf(hint != "")
     }
-    Box(modifier = modifier){
-        BasicTextField(
-            value = text,
-            onValueChange = {
-                text = it
-                onSearch(it)
-            },
-            maxLines = 1,
-            singleLine = true,
-            textStyle = TextStyle(color = Color.Black),
-            modifier = Modifier
-                .fillMaxWidth()
-                .shadow(5.dp, CircleShape)
-                .background(Color.White, CircleShape)
-                .padding(horizontal = 20.dp, vertical = 12.dp)
-                .onFocusChanged {
-                    isHintDisplayed = !it.isFocused && text.isEmpty()
-                }
+    val isAsc by remember {viewmodel.isAsc}
+    Row(modifier = modifier){
+        Box(modifier = Modifier.weight(8f)) {
+            BasicTextField(
+                value = text,
+                onValueChange = {
+                    text = it
+                    onSearch(it)
+                },
+                maxLines = 1,
+                singleLine = true,
+                textStyle = TextStyle(color = Color.Black),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(5.dp, CircleShape)
+                    .background(Color.White, CircleShape)
+                    .padding(horizontal = 20.dp, vertical = 12.dp)
+                    .onFocusChanged {
+                        isHintDisplayed = !it.isFocused && text.isEmpty()
+                    }
 
-        )
-        if(isHintDisplayed){
-            Text(
-                text = hint,
-                color = Color.LightGray,
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
             )
+            if (isHintDisplayed) {
+                Text(
+                    text = hint,
+                    color = Color.LightGray,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        Box(modifier = Modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(Color.White)
+            .clickable {
+                viewmodel.sortPokemon()
+            }
+            .padding(horizontal = 2.dp, vertical = 8.dp)
+            .weight(2f), contentAlignment = Center) {
+            if(isAsc){
+                Icon(
+                    painter = painterResource(id = R.drawable.sort_az),
+                    contentDescription = null,
+                    tint = Color.Black,
+                    modifier = Modifier
+                        .size(25.dp)
+
+                )
+            }else{
+                Icon(
+                    painter = painterResource(id = R.drawable.sort_za),
+                    contentDescription = null,
+                    tint = Color.Black,
+                    modifier = Modifier
+                        .size(25.dp)
+
+                )
+
+            }
         }
     }
 
@@ -145,6 +188,14 @@ fun PokemonListScreenPreview() {
     PokemonListScreen(navController = rememberNavController())
 
 }
+
+//@Preview
+//@Composable
+//fun SerachBarPreview() {
+//    SearchBar(modifier = Modifier
+//        .fillMaxWidth()
+//        .padding(horizontal = 16.dp))
+//}
 
 @Composable
 fun PokemonList(
@@ -192,16 +243,35 @@ fun PokiList(
     viewModel : PokemonListViewModel = hiltViewModel<PokemonListViewModel>()
 ) {
     val pokemonList by remember {viewModel.pokemonList}
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ){
-        items(pokemonList){entry ->
-            PokedexEntry(entry = entry, navController = navController )
+    val isLoading by remember {viewModel.isLoading}
+    val loadError by remember {viewModel.loadError}
+    if(isLoading){
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            if(isLoading) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            }
+            if(loadError.isNotEmpty()) {
+                RetrySection(error = loadError) {
+                    viewModel.pokemonPaginated()
+                }
+            }
+        }
+    }else {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            items(pokemonList) { entry ->
+                PokedexEntry(entry = entry, navController = navController)
+            }
         }
     }
+
 }
 
 @Composable
@@ -216,6 +286,7 @@ fun PokedexEntry(
     var dominantColor by remember{
         mutableStateOf(color)
     }
+    val scope = rememberCoroutineScope()
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
@@ -234,9 +305,10 @@ fun PokedexEntry(
                 navController.navigate(
                     "pokemon_detail_screen/${dominantColor.toArgb()}/${entry.pokemonName}"
                 )
-//                viewmodel.searchPokemonList("")
-                viewmodel.reloadPokemonList()
-
+                scope.launch {
+                    delay(300)
+                    viewmodel.reloadPokemonList()
+                }
             }
     ){
         print(".............Image Url:${entry.imageUrl}.......................")
