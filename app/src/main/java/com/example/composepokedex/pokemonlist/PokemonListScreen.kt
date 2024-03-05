@@ -195,45 +195,45 @@ fun PokemonListScreenPreview() {
 //        .padding(horizontal = 16.dp))
 //}
 
-@Composable
-fun PokemonList(
-    navController: NavController,
-    viewModel : PokemonListViewModel = hiltViewModel<PokemonListViewModel>()
-) {
-    val pokemonList by remember {viewModel.pokemonList}
-    val endReached by remember {viewModel.endReached}
-    val loadError by remember {viewModel.loadError}
-    val isLoading by remember {viewModel.isLoading}
-    val isSearching by remember{ viewModel.isSearching}
-
-    LazyColumn(contentPadding = PaddingValues(16.dp)){
-        val itemCount = if(pokemonList.size %2 ==0){
-            pokemonList.size/2
-        }else{
-            pokemonList.size/2 + 1
-        }
-        items(itemCount){
-            if(it >= itemCount - 1 && !endReached && !isLoading && !isSearching){
-                LaunchedEffect(key1 = true){
-                    viewModel.pokemonPaginated()
-                }            }
-            PokedexRow(rowIndex = it, entries = pokemonList, navController = navController)
-        }
-    }
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        if(isLoading) {
-            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-        }
-        if(loadError.isNotEmpty()) {
-            RetrySection(error = loadError) {
-                viewModel.pokemonPaginated()
-            }
-        }
-    }
-}
+//@Composable
+//fun PokemonList(
+//    navController: NavController,
+//    viewModel : PokemonListViewModel = hiltViewModel<PokemonListViewModel>()
+//) {
+//    val pokemonList by remember {viewModel.pokemonList}
+//    val endReached by remember {viewModel.endReached}
+//    val loadError by remember {viewModel.loadError}
+//    val isLoading by remember {viewModel.isLoading}
+//    val isSearching by remember{ viewModel.isSearching}
+//
+//    LazyColumn(contentPadding = PaddingValues(16.dp)){
+//        val itemCount = if(pokemonList.size %2 ==0){
+//            pokemonList.size/2
+//        }else{
+//            pokemonList.size/2 + 1
+//        }
+//        items(itemCount){
+//            if(it >= itemCount - 1 && !endReached && !isLoading && !isSearching){
+//                LaunchedEffect(key1 = true){
+//                    viewModel.pokemonPaginated()
+//                }            }
+//            PokedexRow(rowIndex = it, entries = pokemonList, navController = navController)
+//        }
+//    }
+//    Box(
+//        contentAlignment = Alignment.Center,
+//        modifier = Modifier.fillMaxSize()
+//    ) {
+//        if(isLoading) {
+//            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+//        }
+//        if(loadError.isNotEmpty()) {
+//            RetrySection(error = loadError) {
+//                viewModel.pokemonPaginated()
+//            }
+//        }
+//    }
+//}
 
 @Composable
 fun PokiList(
@@ -242,7 +242,7 @@ fun PokiList(
 ) {
     val pokemonList by remember {viewModel.pokemonList}
     val isLoading by remember {viewModel.isLoading}
-    val loadError by remember {viewModel.loadError}
+//    val loadError by remember {viewModel.loadError}
     if(isLoading){
         Box(
             contentAlignment = Alignment.Center,
@@ -251,11 +251,11 @@ fun PokiList(
             if(isLoading) {
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
-            if(loadError.isNotEmpty()) {
-                RetrySection(error = loadError) {
-                    viewModel.pokemonPaginated()
-                }
-            }
+//            if(loadError.isNotEmpty()) {
+//                RetrySection(error = loadError) {
+//                    viewModel.pokemonPaginated()
+//                }
+//            }
         }
     }else {
         LazyVerticalGrid(
@@ -268,7 +268,6 @@ fun PokiList(
                 items = pokemonList,
                 key = {
                     it.number
-
                 }
             ) { entry ->
                 PokedexEntry(entry = entry, navController = navController)

@@ -3,6 +3,7 @@ package com.example.composepokedex.pokemonlist
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.util.Log
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -16,6 +17,7 @@ import com.example.composepokedex.repository.PokemonRepository
 import com.example.composepokedex.util.Constants.PAGE_SIZE
 import com.example.composepokedex.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -30,8 +32,6 @@ class   PokemonListViewModel @Inject constructor(
     var loadError = mutableStateOf("")
     var isAsc = mutableStateOf(true)
     var isLoading = mutableStateOf(false)
-    var endReached = mutableStateOf(false)
-
     var navigating  = mutableStateOf(false)
 
 
@@ -44,7 +44,7 @@ class   PokemonListViewModel @Inject constructor(
     var isSearching = mutableStateOf(false)
 
     init {
-        pokemonPaginated()
+          pokemonPaginated()
     }
     fun reloadPokemonList()
     {

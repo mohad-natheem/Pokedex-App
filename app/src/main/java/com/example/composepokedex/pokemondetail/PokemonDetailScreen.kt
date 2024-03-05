@@ -142,7 +142,6 @@ fun PokemonDetailScreen(
 fun PokemonDetailTopSection(
     navController: NavController,
     modifier: Modifier = Modifier,
-    viewModel: PokemonListViewModel = hiltViewModel()
 ) {
     val interactionSource = remember{ MutableInteractionSource() }
     var isPressed by remember{ mutableStateOf(false) }
