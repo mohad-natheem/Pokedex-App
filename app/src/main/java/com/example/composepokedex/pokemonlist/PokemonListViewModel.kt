@@ -3,7 +3,10 @@ package com.example.composepokedex.pokemonlist
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.util.Log
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -28,6 +31,9 @@ class   PokemonListViewModel @Inject constructor(
     var isAsc = mutableStateOf(true)
     var isLoading = mutableStateOf(false)
     var endReached = mutableStateOf(false)
+
+    var navigating  = mutableStateOf(false)
+
 
     private var cachedPokemonList = listOf<PokedexListEntry>()
     private var sortedPokemonList = listOf<PokedexListEntry>()
@@ -94,6 +100,12 @@ class   PokemonListViewModel @Inject constructor(
         }
 
     }
+    fun searchPokemon(query: String){
+        val searchResults = pokemonList.value.filter { pokemon ->
+            pokemon.pokemonName.contains(query,ignoreCase = true) || pokemon.number.toString() == query.trim()
+        }
+        pokemonList.value = searchResults
+    }
 
     fun pokemonPaginated() {
         viewModelScope.launch {
@@ -101,8 +113,8 @@ class   PokemonListViewModel @Inject constructor(
             val result = repository.getPokemonList(100000,0)
             when (result) {
                 is Resource.Success -> {
-                    endReached.value = currPage * PAGE_SIZE >= result.data!!.count
-                    val pokedexEntries = result.data.results.mapIndexed { index, entry ->
+//                    endReached.value = currPage * PAGE_SIZE >= result.data!!.count
+                    val pokedexEntries = result.data!!.results.mapIndexed { index, entry ->
                         val number = if (entry.url.endsWith("/")) {
                             entry.url.dropLast(1).takeLastWhile { it.isDigit() }
                         } else {

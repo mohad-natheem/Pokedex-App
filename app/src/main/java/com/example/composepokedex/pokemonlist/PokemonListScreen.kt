@@ -102,8 +102,6 @@ fun PokemonListScreen(
 
     }
 }
-
-
 @Composable
 fun SearchBar(
     modifier:Modifier = Modifier,
@@ -266,7 +264,13 @@ fun PokiList(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            items(pokemonList) { entry ->
+            items(
+                items = pokemonList,
+                key = {
+                    it.number
+
+                }
+            ) { entry ->
                 PokedexEntry(entry = entry, navController = navController)
             }
         }
@@ -286,6 +290,7 @@ fun PokedexEntry(
     var dominantColor by remember{
         mutableStateOf(color)
     }
+    val isnavigating by remember{ viewmodel.navigating}
     val scope = rememberCoroutineScope()
     Box(
         contentAlignment = Alignment.Center,
@@ -301,15 +306,21 @@ fun PokedexEntry(
                     )
                 )
             )
-            .clickable {
-                navController.navigate(
-                    "pokemon_detail_screen/${dominantColor.toArgb()}/${entry.pokemonName}"
-                )
-                scope.launch {
-                    delay(300)
-                    viewmodel.reloadPokemonList()
+            .clickable
+            {
+                if(!isnavigating) {
+                    viewmodel.navigating.value = true
+                    navController.navigate(
+                        "pokemon_detail_screen/${dominantColor.toArgb()}/${entry.pokemonName}"
+                    )
                 }
+                scope.launch {
+                delay(500)
+                viewmodel.reloadPokemonList()
+                    viewmodel.navigating.value = false
+
             }
+        }
     ){
         print(".............Image Url:${entry.imageUrl}.......................")
         Column {
