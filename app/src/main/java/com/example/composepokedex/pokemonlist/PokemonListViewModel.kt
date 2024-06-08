@@ -86,10 +86,17 @@ class   PokemonListViewModel @Inject constructor(
                 isSearchStarting = true
                 return@launch
             }
-            val results = listToSearch.filter {
-                it.pokemonName.contains(query, ignoreCase = true) ||
-                        it.number.toString() == query.trim()
+            val startsWith = listToSearch.filter {
+                it.pokemonName.startsWith(query)
             }
+            val contains =  listToSearch.filter {
+                (!it.pokemonName.startsWith(query) && it.pokemonName.contains(query, ignoreCase = true) )
+            }
+
+            val results = mutableListOf<PokedexListEntry>()
+            results.addAll(startsWith)
+            results.addAll(contains)
+
             if (isSearchStarting) {
                 cachedPokemonList = pokemonList.value
                 isSearchStarting = false
